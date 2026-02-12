@@ -1,12 +1,14 @@
 from argon2 import PasswordHasher, Type
-import secrets
+import base64
 
 class ChaosPoW:
-    # Parametri Base 
     TIME_COST = 2          
-    MEMORY_COST = 65536    # 64 MB
+    MEMORY_COST = 65536    
     PARALLELISM = 1        
     HASH_LEN = 32          
+
+    # Definiamo il numero massimo possibile (2^256, perché l'hash è 32 bytes)
+    MAX_TARGET = 2**(HASH_LEN * 8) - 1
 
     def __init__(self):
         self.hasher = PasswordHasher(
@@ -17,34 +19,53 @@ class ChaosPoW:
             type=Type.ID
         )
 
-    def mine_block(self, entropy_data, difficulty_zeros):
+    def _check_hash(self, full_hash, difficulty):
         """
-        [MINING LOOP]
-        Continua a provare diversi 'Nonce' finché l'hash generato
-        non inizia con un numero sufficiente di Zeri.
+        Controlla se l'hash (convertito in numero) è minore del Target.
+        Più alta è la difficoltà, più piccolo è il Target, più difficile è vincere.
         """
+        try:
+            # 1. Estraiamo la parte finale dell'hash (dopo l'ultimo $)
+            b64_hash = full_hash.split("$")[-1]
+            
+            # 2. Aggiustiamo il padding Base64 (Python è pignolo)
+            padding = '=' * ((4 - len(b64_hash) % 4) % 4)
+            
+            # 3. Decodifichiamo in Byte e poi in Numero Intero
+            hash_bytes = base64.b64decode(b64_hash + padding)
+            hash_int = int.from_bytes(hash_bytes, byteorder='big')
+            
+            # 4. Calcoliamo il bersaglio
+            # Esempio: Se Difficoltà è 100, il bersaglio è 1/100 del massimo.
+            target = self.MAX_TARGET // difficulty
+            
+            return hash_int <= target
+        except Exception as e:
+            return False
+
+    def mine_block(self, entropy_data, difficulty):
         nonce = 0
-        prefix_target = "0" * difficulty_zeros 
-        
-        print(f"--- Inizio Mining (Target: hash che inizia con '{prefix_target}') ---")
+        print(f"--- Mining Numerico (Difficoltà: {difficulty}) ---")
         
         while True:
-            # Uniamo i dati: Entropia + Un numero che cambia sempre (Nonce)
             candidate_data = f"{entropy_data}{nonce}"
-            
-            # Calcoliamo l'hash 
             full_hash = self.hasher.hash(candidate_data)
             
-            hashed_value = full_hash.split("$")[-1]
-            
-            # CONTROLLO LOTTERIA: Inizia con gli zeri richiesti?
-            # Nota: In un sistema reale si converte in binario, qui usiamo stringhe per semplicità
-            if hashed_value.startswith(prefix_target):
+            # Usiamo la nuova verifica numerica
+            if self._check_hash(full_hash, difficulty):
                 return full_hash, nonce
             
-            # Se non va bene, incrementiamo il nonce e riproviamo
             nonce += 1
-            
-            # (Opzionale) Feedback visivo ogni 10 tentativi
             if nonce % 10 == 0:
-                 print(f"\rTentativo {nonce}... (Ultimo hash: {hashed_value[:5]}...)", end="")
+                 print(f"\rTentativo {nonce}...", end="")
+
+    def verify_mined_block(self, entropy_data, nonce, full_hash, difficulty):
+        # 1. Verifica Crittografica (Argon2)
+        try:
+            candidate_data = f"{entropy_data}{nonce}"
+            self.hasher.verify(full_hash, candidate_data)
+        except:
+            return False
+            
+        # 2. Verifica Numerica (Target)
+        return self._check_hash(full_hash, difficulty)
