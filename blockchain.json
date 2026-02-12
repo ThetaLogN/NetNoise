@@ -1,0 +1,110 @@
+{
+    "chain": [
+        {
+            "index": 0,
+            "timestamp": 1770737619.745184,
+            "entropy": "GENESIS",
+            "nonce": 0,
+            "hash": "0000000000000000000000000000000000000000000000000000000000000000",
+            "previous_hash": "0"
+        },
+        {
+            "index": 1,
+            "timestamp": 1770737634.546604,
+            "entropy": "8d9ab8d67a1ef656bee952ebe6ba9f22875b4a617397a422ed1b197d3e73afd5",
+            "nonce": 49,
+            "hash": "$argon2id$v=19$m=65536,t=2,p=1$S9BKclaeoZj+9da2vf9FMg$0XckiuO745vorK/te+Ms1NVEZkzsjnzaBAbBAW1lXII",
+            "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+            "index": 2,
+            "timestamp": 1770737637.879991,
+            "entropy": "62fc7ca9f5de18bf42fa6d0bf7a9410ce2289550dee527dff97970cd810768a5",
+            "nonce": 8,
+            "hash": "$argon2id$v=19$m=65536,t=2,p=1$ngy1zFZ/RRycyxR4eQ9Ong$09j/pJz5ZyOda9VP4umTNnYYwPOuvhfntW02n1NWrfE",
+            "previous_hash": "$argon2id$v=19$m=65536,t=2,p=1$S9BKclaeoZj+9da2vf9FMg$0XckiuO745vorK/te+Ms1NVEZkzsjnzaBAbBAW1lXII"
+        },
+        {
+            "index": 3,
+            "timestamp": 1770737646.0319092,
+            "entropy": "e09cfd04e3bd2527b9e26f75319824470a5c76329ccc7c02fe66d2f160b58183",
+            "nonce": 70,
+            "hash": "$argon2id$v=19$m=65536,t=2,p=1$l3HQhMSiElY6QDtRMxuQgQ$0YDW1KYxV7jzieMgNYiPnmSFaGJyOmzaiXfcU3urmKk",
+            "previous_hash": "$argon2id$v=19$m=65536,t=2,p=1$ngy1zFZ/RRycyxR4eQ9Ong$09j/pJz5ZyOda9VP4umTNnYYwPOuvhfntW02n1NWrfE"
+        },
+        {
+            "index": 4,
+            "timestamp": 1770737649.140098,
+            "entropy": "c64ef2107f80b6243e5254fe272344686a74fed19a2ca0b291dfbaadf04574b1",
+            "nonce": 5,
+            "hash": "$argon2id$v=19$m=65536,t=2,p=1$MIQn8/thxz0BW+syfaK6Kg$0KI1T5PxWr/y00qJrc6luYESZihOUCJZn0aOWaVGyPs",
+            "previous_hash": "$argon2id$v=19$m=65536,t=2,p=1$l3HQhMSiElY6QDtRMxuQgQ$0YDW1KYxV7jzieMgNYiPnmSFaGJyOmzaiXfcU3urmKk"
+        },
+        {
+            "index": 5,
+            "timestamp": 1770737652.8652658,
+            "entropy": "e67603c78355d8b1427c33a193db37a7c6816ee3a696717afe9d72f11892305a",
+            "nonce": 13,
+            "hash": "$argon2id$v=19$m=65536,t=2,p=1$0Oib8pRbjI3V33PKWLfVKQ$0zo/hq9Ah618pZLhbyXfhvKU8wEXboxAdXQTmuNid04",
+            "previous_hash": "$argon2id$v=19$m=65536,t=2,p=1$MIQn8/thxz0BW+syfaK6Kg$0KI1T5PxWr/y00qJrc6luYESZihOUCJZn0aOWaVGyPs"
+        },
+        {
+            "index": 6,
+            "timestamp": 1770737685.584737,
+            "entropy": "fc4708689f18f83a65d9549df1d35a6082e559384e0bc288709a1424529e9ca4",
+            "nonce": 385,
+            "hash": "$argon2id$v=19$m=65536,t=2,p=1$XuT/56GUYD85+uR8RbuZyA$02dkF32hJ/vD4Ej8ZvGE83iLPqZeqtcoGiE0Hw/MFdk",
+            "previous_hash": "$argon2id$v=19$m=65536,t=2,p=1$0Oib8pRbjI3V33PKWLfVKQ$0zo/hq9Ah618pZLhbyXfhvKU8wEXboxAdXQTmuNid04"
+        },
+        {
+            "index": 7,
+            "timestamp": 1770737693.980693,
+            "entropy": "b942c367ae0153e5cd5c0c2e4dd136eafdddca99fddb024b09dac4810d986262",
+            "nonce": 73,
+            "hash": "$argon2id$v=19$m=65536,t=2,p=1$B6IOvowcTFBp9mgPnjgTMA$0XQ90yrQI1nuDMNu/x6L/a3BxbeXV0ZN26XSd99lULI",
+            "previous_hash": "$argon2id$v=19$m=65536,t=2,p=1$XuT/56GUYD85+uR8RbuZyA$02dkF32hJ/vD4Ej8ZvGE83iLPqZeqtcoGiE0Hw/MFdk"
+        },
+        {
+            "index": 8,
+            "timestamp": 1770737712.265783,
+            "entropy": "e0ac849cedc02dc77a2d12c985e88c7fdcfb929820722966bf6a7d5db754ff0d",
+            "nonce": 199,
+            "hash": "$argon2id$v=19$m=65536,t=2,p=1$qyvLPQpaVOq9DlE+lR0MSA$0xyyK0VwuY+a9Oxo9TqfOfqw60TAl1UTxbIsimVtNrM",
+            "previous_hash": "$argon2id$v=19$m=65536,t=2,p=1$B6IOvowcTFBp9mgPnjgTMA$0XQ90yrQI1nuDMNu/x6L/a3BxbeXV0ZN26XSd99lULI"
+        },
+        {
+            "index": 9,
+            "timestamp": 1770737726.6961632,
+            "entropy": "92fb3ce3af2bbaa49c01bad38992c253c048d5bd600976a0a16315a0bacbcc10",
+            "nonce": 150,
+            "hash": "$argon2id$v=19$m=65536,t=2,p=1$C3igvjEciCcC9OhnTzZgmw$0w+9pqwcdSmMQr94Vsnxwiqdgdor8HpfFnj+r37mHVE",
+            "previous_hash": "$argon2id$v=19$m=65536,t=2,p=1$qyvLPQpaVOq9DlE+lR0MSA$0xyyK0VwuY+a9Oxo9TqfOfqw60TAl1UTxbIsimVtNrM"
+        },
+        {
+            "index": 10,
+            "timestamp": 1770737735.638355,
+            "entropy": "f90aa983eaa335c301376710d76471e420e8bd9afa4832b042519319046a39fc",
+            "nonce": 80,
+            "hash": "$argon2id$v=19$m=65536,t=2,p=1$mOeqGuumlY4c08W7kOYOBg$0tU0osLL41+agSBOiOhBcqGF/h7YAJzrgSKpWKig2QI",
+            "previous_hash": "$argon2id$v=19$m=65536,t=2,p=1$C3igvjEciCcC9OhnTzZgmw$0w+9pqwcdSmMQr94Vsnxwiqdgdor8HpfFnj+r37mHVE"
+        },
+        {
+            "index": 11,
+            "timestamp": 1770737742.691523,
+            "entropy": "9e9cc782e5cd8287486297c0757cb12b10419297770d1bef3813d2d31e2371f6",
+            "nonce": 55,
+            "hash": "$argon2id$v=19$m=65536,t=2,p=1$VS64Ocu16H/IPS9nD/Yiow$00nVvQcB/2ndU1IEonsR5ufe70wUyxD+W3gk7GDuZpU",
+            "previous_hash": "$argon2id$v=19$m=65536,t=2,p=1$mOeqGuumlY4c08W7kOYOBg$0tU0osLL41+agSBOiOhBcqGF/h7YAJzrgSKpWKig2QI"
+        },
+        {
+            "index": 12,
+            "timestamp": 1770737746.643374,
+            "entropy": "a3cfb101416d31cdce3d5486d917c49daeec9396ea73d454d474b90ec4accd67",
+            "nonce": 16,
+            "hash": "$argon2id$v=19$m=65536,t=2,p=1$dOUC3FfEFbtHwO26uJrDcA$0Y7vF/YXybHnNH5ZPyfrdn9urfJb+KT433Ugyv4GzdA",
+            "previous_hash": "$argon2id$v=19$m=65536,t=2,p=1$VS64Ocu16H/IPS9nD/Yiow$00nVvQcB/2ndU1IEonsR5ufe70wUyxD+W3gk7GDuZpU"
+        }
+    ],
+    "difficulty": 1,
+    "last_adjustment_time": 1770737726.696636
+}
