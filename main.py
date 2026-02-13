@@ -1,137 +1,122 @@
-import threading
+import os
 import time
+import threading
 import socket
 import hashlib
-import json
-# Assicurati di avere il file chaos_pow.py aggiornato (versione numerica) nella stessa cartella!
-from chaos_pow import ChaosPoW 
+import struct
+import ctypes
+from collections import Counter
 
-class EntropyCollector:
+# -----------------------------
+# Controllo RDRAND support
+# -----------------------------
+def rdrand_supported():
+    try:
+        ctypes.CDLL(None).__builtin_ia32_rdrand64_step
+        return True
+    except AttributeError:
+        return False
+
+def rdrand64():
+    """Ritorna un intero 64bit casuale tramite RDRAND"""
+    val = ctypes.c_uint64()
+    ok = ctypes.CDLL(None).__builtin_ia32_rdrand64_step(ctypes.byref(val))
+    if ok != 1:
+        raise RuntimeError("RDRAND fallito")
+    return val.value
+
+# -----------------------------
+# Entropy Collector
+# -----------------------------
+class MultiSourceEntropy:
     def __init__(self):
         self.entropy_pool = []
-        # Aggiunto timeout globale per evitare blocchi
-        socket.setdefaulttimeout(1)
-        self.target_servers = ["8.8.8.8", "1.1.1.1", "9.9.9.9"] 
-        self.counter = 0
         self.lock = threading.Lock()
+        self.counter = 0
+        socket.setdefaulttimeout(0.5)
+        self.target_servers = ["8.8.8.8", "1.1.1.1", "9.9.9.9"]
 
-    def get_network_jitter(self):
-        """Fase 1: Misura lo scarto temporale dei pacchetti UDP"""
+    # ---- Network jitter
+    def network_entropy(self):
         for server in self.target_servers:
             t1 = time.perf_counter_ns()
             try:
-                # Usa socket usa e getta per pulizia
                 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 sock.sendto(b"", (server, 53))
                 sock.recvfrom(1024)
                 t2 = time.perf_counter_ns()
                 delta = t2 - t1
-                self.entropy_pool.append(str(delta % 16))
+                self.entropy_pool.append(struct.pack(">Q", delta))
                 sock.close()
-            except Exception:
-                self.entropy_pool.append(str(time.perf_counter_ns() % 16))
+            except:
+                self.entropy_pool.append(struct.pack(">Q", time.perf_counter_ns() % (2**64)))
 
-    def race_condition_worker(self):
-        """Worker per creare collisioni sulla CPU"""
+    # ---- CPU race / cache jitter
+    def race_worker(self):
         for _ in range(1000):
             with self.lock:
                 self.counter += 1
 
-    def get_cpu_noise(self):
-        """Fase 2: Genera rumore termico/scheduling CPU"""
+    def cpu_entropy(self):
         self.counter = 0
         threads = []
         t_start = time.perf_counter_ns()
-        for _ in range(2):
-            t = threading.Thread(target=self.race_condition_worker)
-            threads.append(t)
+        for _ in range(4):
+            t = threading.Thread(target=self.race_worker)
             t.start()
+            threads.append(t)
         for t in threads:
             t.join()
         t_end = time.perf_counter_ns()
-        self.entropy_pool.append(str(t_end - t_start))
+        self.entropy_pool.append(struct.pack(">Q", t_end - t_start))
+        self.entropy_pool.append(struct.pack(">Q", self.counter))
 
-    def generate_true_random(self):
-        """Fase 3: Raccolta e Whitening (SHA-3)"""
-        self.entropy_pool = []
-        self.get_network_jitter()
-        self.get_cpu_noise()
-        raw_data = "".join(self.entropy_pool).encode()
-        return hashlib.sha3_256(raw_data).hexdigest()
+    # ---- Clock drift
+    def clock_entropy(self):
+        self.entropy_pool.append(struct.pack(">Q", int(time.perf_counter_ns())))
 
-def run_miner_node():
-    collector = EntropyCollector()
-    pow_engine = ChaosPoW()
-    
-    SERVER_IP = "127.0.0.1"
-    SERVER_PORT = 5050 # Assicurati che il server ascolti su questa porta
-
-    print(f"--- NetNoise Miner ---")
-
-    while True:
+    # ---- Disk / filesystem
+    def disk_entropy(self):
         try:
-            # 1. GENERAZIONE ENTROPIA
-            print("\n[1] Generazione Entropia...", end="\r")
-            raw_entropy = collector.generate_true_random()
-            
-            # 2. RICHIESTA DIFFICOLTA'
-            current_difficulty = 50
-            try:
-                s_check = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s_check.connect((SERVER_IP, SERVER_PORT))
-                response = s_check.recv(1024).decode()
-                config = json.loads(response)
-                current_difficulty = int(config.get('current_difficulty', 50))
-                s_check.close()
-            except Exception as e:
-                print(f"\n⚠️ Server offline? Uso diff locale: {current_difficulty}")
+            f = open("/tmp/.entropy_file", "rb")
+            data = f.read(64)
+            self.entropy_pool.append(data)
+            f.close()
+        except:
+            self.entropy_pool.append(os.urandom(64))
 
-            # 3. MINING (Logica Numerica)
-            # Nota: Non stampiamo più gli '000', ma il divisore.
-            print(f"[2] Mining... (Difficoltà: {current_difficulty})")
-            
-            start_t = time.time()
-            
-            # Qui chiamiamo la nuova funzione numerica
-            full_hash, nonce = pow_engine.mine_block(raw_entropy, current_difficulty)
-            
-            duration = time.time() - start_t
-            print(f">>> TROVATO in {duration:.2f}s! Nonce: {nonce}")
+    # ---- OS entropy
+    def os_entropy(self):
+        self.entropy_pool.append(os.urandom(64))
 
-            # 4. INVIO SOLUZIONE
-            print("[3] Invio soluzione...", end="")
-            payload = {
-                "entropy": raw_entropy,
-                "nonce": nonce,
-                "hash": full_hash
-            }
-            
-            s_send = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s_send.connect((SERVER_IP, SERVER_PORT))
-            
-            # Ignoriamo il messaggio di benvenuto (che contiene la difficulty)
-            s_send.recv(1024) 
-            
-            # Inviamo il blocco
-            s_send.send(json.dumps(payload).encode())
-            
-            result = s_send.recv(1024).decode()
-            if "ACCEPTED" in result:
-                print(" -> ✅ Accettato!")
-            else:
-                print(f" -> ❌ Rifiutato: {result}")
-            
-            s_send.close()
- 
-            # Piccola pausa per non fondere la CPU
-            time.sleep(1)
+    # ---- RDRAND
+    def rdrand_entropy(self):
+        if rdrand_supported():
+            for _ in range(4):
+                val = rdrand64()
+                self.entropy_pool.append(struct.pack(">Q", val))
 
-        except KeyboardInterrupt:
-            print("\n🛑 Mining interrotto dall'utente.")
-            break
-        except Exception as e:
-            print(f"\n❌ Errore critico nel loop: {e}")
-            time.sleep(5)
+    # ---- Raccolta completa
+    def generate_entropy(self):
+        self.entropy_pool = []
 
+        self.network_entropy()
+        self.cpu_entropy()
+        self.clock_entropy()
+        self.disk_entropy()
+        self.os_entropy()
+        self.rdrand_entropy()
+
+        # Combine tutti i dati e whitening finale
+        raw = b"".join(self.entropy_pool)
+        final = hashlib.sha3_256(raw).digest()  # 256 bit uniformi
+        #return final
+        return raw
+
+# -----------------------------
+# Test rapido
+# -----------------------------
 if __name__ == "__main__":
-    run_miner_node()
+    collector = MultiSourceEntropy()
+    sample = collector.generate_entropy()
+    print(f"✅ Entropy TRNG 256bit: {sample.hex()}")
