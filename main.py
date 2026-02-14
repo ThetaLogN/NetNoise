@@ -1,122 +1,86 @@
 import os
 import time
-import threading
-import socket
+import hmac
 import hashlib
-import struct
-import ctypes
-from collections import Counter
+import threading
 
-# -----------------------------
-# Controllo RDRAND support
-# -----------------------------
-def rdrand_supported():
-    try:
-        ctypes.CDLL(None).__builtin_ia32_rdrand64_step
-        return True
-    except AttributeError:
-        return False
 
-def rdrand64():
-    """Ritorna un intero 64bit casuale tramite RDRAND"""
-    val = ctypes.c_uint64()
-    ok = ctypes.CDLL(None).__builtin_ia32_rdrand64_step(ctypes.byref(val))
-    if ok != 1:
-        raise RuntimeError("RDRAND fallito")
-    return val.value
+class EntropyEngine:
+    """
+    CSPRNG basato su HMAC-DRBG (NIST style)
+    - Seed iniziale da OS
+    - Reseed periodico
+    - Forward secrecy
+    - Thread-safe
+    """
 
-# -----------------------------
-# Entropy Collector
-# -----------------------------
-class MultiSourceEntropy:
-    def __init__(self):
-        self.entropy_pool = []
+    def __init__(self, reseed_interval=60):
         self.lock = threading.Lock()
-        self.counter = 0
-        socket.setdefaulttimeout(0.5)
-        self.target_servers = ["8.8.8.8", "1.1.1.1", "9.9.9.9"]
+        self.reseed_interval = reseed_interval
+        self.last_reseed = time.time()
 
-    # ---- Network jitter
-    def network_entropy(self):
-        for server in self.target_servers:
-            t1 = time.perf_counter_ns()
-            try:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                sock.sendto(b"", (server, 53))
-                sock.recvfrom(1024)
-                t2 = time.perf_counter_ns()
-                delta = t2 - t1
-                self.entropy_pool.append(struct.pack(">Q", delta))
-                sock.close()
-            except:
-                self.entropy_pool.append(struct.pack(">Q", time.perf_counter_ns() % (2**64)))
+        # Stato DRBG
+        self.K = b"\x00" * 32
+        self.V = b"\x01" * 32
 
-    # ---- CPU race / cache jitter
-    def race_worker(self):
-        for _ in range(1000):
-            with self.lock:
-                self.counter += 1
+        seed_material = os.urandom(64)
+        self._update(seed_material)
 
-    def cpu_entropy(self):
-        self.counter = 0
-        threads = []
-        t_start = time.perf_counter_ns()
-        for _ in range(4):
-            t = threading.Thread(target=self.race_worker)
-            t.start()
-            threads.append(t)
-        for t in threads:
-            t.join()
-        t_end = time.perf_counter_ns()
-        self.entropy_pool.append(struct.pack(">Q", t_end - t_start))
-        self.entropy_pool.append(struct.pack(">Q", self.counter))
+    # -------------------------------------------------
+    # INTERNAL UPDATE (HMAC-DRBG core)
+    # -------------------------------------------------
 
-    # ---- Clock drift
-    def clock_entropy(self):
-        self.entropy_pool.append(struct.pack(">Q", int(time.perf_counter_ns())))
+    def _hmac(self, key, data):
+        return hmac.new(key, data, hashlib.sha256).digest()
 
-    # ---- Disk / filesystem
-    def disk_entropy(self):
-        try:
-            f = open("/tmp/.entropy_file", "rb")
-            data = f.read(64)
-            self.entropy_pool.append(data)
-            f.close()
-        except:
-            self.entropy_pool.append(os.urandom(64))
+    def _update(self, provided_data=b""):
+        self.K = self._hmac(self.K, self.V + b"\x00" + provided_data)
+        self.V = self._hmac(self.K, self.V)
 
-    # ---- OS entropy
-    def os_entropy(self):
-        self.entropy_pool.append(os.urandom(64))
+        if provided_data:
+            self.K = self._hmac(self.K, self.V + b"\x01" + provided_data)
+            self.V = self._hmac(self.K, self.V)
 
-    # ---- RDRAND
-    def rdrand_entropy(self):
-        if rdrand_supported():
-            for _ in range(4):
-                val = rdrand64()
-                self.entropy_pool.append(struct.pack(">Q", val))
+    # -------------------------------------------------
+    # RESEED
+    # -------------------------------------------------
 
-    # ---- Raccolta completa
-    def generate_entropy(self):
-        self.entropy_pool = []
+    def reseed(self):
+        with self.lock:
+            seed_material = os.urandom(64)
+            self._update(seed_material)
+            self.last_reseed = time.time()
 
-        self.network_entropy()
-        self.cpu_entropy()
-        self.clock_entropy()
-        self.disk_entropy()
-        self.os_entropy()
-        self.rdrand_entropy()
+    # -------------------------------------------------
+    # RANDOM OUTPUT
+    # -------------------------------------------------
 
-        # Combine tutti i dati e whitening finale
-        raw = b"".join(self.entropy_pool)
-        final = hashlib.sha3_256(raw).digest()  # 256 bit uniformi
-        #return final
-        return raw
+    def random_bytes(self, n=32):
+        with self.lock:
 
-# -----------------------------
-# Test rapido
-# -----------------------------
+            # Reseed automatico
+            if time.time() - self.last_reseed > self.reseed_interval:
+                self.reseed()
+
+            output = b""
+
+            while len(output) < n:
+                self.V = self._hmac(self.K, self.V)
+                output += self.V
+
+            self._update()  # forward secrecy
+
+            return output[:n]
+
+    def random_hex(self, n=32):
+        return self.random_bytes(n).hex()
+
+
 if __name__ == "__main__":
-    collector = MultiSourceEntropy()
-    sample = collector.generate_entropy()
-    print(f"✅ Entropy TRNG 256bit: {sample.hex()}")
+    engine = EntropyEngine()
+
+    print("EntropyEngine")
+
+    for _ in range(5):
+        print(engine.random_hex(32))
+        time.sleep(1)
