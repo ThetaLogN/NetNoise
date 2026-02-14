@@ -7,7 +7,7 @@ import threading
 
 class EntropyEngine:
     """
-    CSPRNG basato su HMAC-DRBG (NIST style)
+    CSPRNG basato su HMAC-DRBG
     - Seed iniziale da OS
     - Reseed periodico
     - Forward secrecy
