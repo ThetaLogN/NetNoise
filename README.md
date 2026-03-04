@@ -199,15 +199,3 @@ furnished to do so, subject to the following conditions:
 
 [Full MIT License text...]
 ```
-
----
-
-
-### **2. `LICENSE`**
-```
-MIT License
-
-Copyright (c) 2026 Giorgio Martucci
-[...]
-```
-
