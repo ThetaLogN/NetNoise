@@ -69,7 +69,7 @@ NetNoise generates randomness in **three phases**:
 │ PHASE 2: Proof-of-Work Mining (Chain-Linked)           │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
-│  salt ← previous_hash[0:16]  # ← INNOVATION!           │
+│  salt ← previous_hash[0:16]                             │
 │                                                         │
 │  Find nonce such that:                                  │
 │  hash = Argon2id(seed || nonce, salt) < target         │
