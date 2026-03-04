@@ -1,4 +1,4 @@
-# NetNoise 🎲⛓️
+# NetNoise
 
 **Decentralized Public Randomness Beacon with Cryptographic Chain-Linking**
 
@@ -8,7 +8,7 @@
 
 ---
 
-## 🌟 Overview
+## Overview
 
 **NetNoise** is a novel blockchain-based system for generating **verifiable public randomness** without trusted parties. Unlike existing solutions (NIST Beacon, Chainlink VRF, Drand), NetNoise combines:
 
@@ -18,7 +18,7 @@
 - ✅ **Distributed consensus** without centralized trust
 - ✅ **Public verifiability** with deterministic aggregation
 
-### 🔑 Key Innovation
+### Key Innovation
 
 NetNoise uses the **hash of the previous block as the salt parameter of Argon2id**, creating a mathematical dependency between consecutive blocks that is stronger than traditional Bitcoin-style chain-linking.
 ```python
@@ -32,7 +32,7 @@ This ensures that **altering any block requires re-mining all subsequent blocks*
 ---
 
 
-## ✨ Features
+## Features
 
 ### Core Capabilities
 
@@ -53,7 +53,7 @@ This ensures that **altering any block requires re-mining all subsequent blocks*
 
 ---
 
-## 🔬 How It Works
+## How It Works
 
 NetNoise generates randomness in **three phases**:
 ```
@@ -103,7 +103,7 @@ Block N+1:  salt = Argon2_output[0:16]
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ### Prerequisites
 
@@ -131,7 +131,7 @@ argon2-cffi>=21.3.0
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ### System Components
 ```
@@ -182,7 +182,7 @@ Block {
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 ```
